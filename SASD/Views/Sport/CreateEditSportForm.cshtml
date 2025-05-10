@@ -1,0 +1,45 @@
+﻿@model SASD.Models.Sport
+@{
+    ViewData["Title"] = Model?.Id == null ? "Create Sport" : "Edit Sport";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<form asp-action="CreateEditSport" method="post">
+    <input type="hidden" asp-for="Id" />
+
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="NoOfPlayers" class="form-label"></label>
+        <input asp-for="NoOfPlayers" class="form-control" type="number" />
+        <span asp-validation-for="NoOfPlayers" class="text-danger"></span>
+    </div>
+
+    @if (Model?.Id != 0)
+    {
+        <div class="mb-3">
+            <label asp-for="NoOfSubscriptions" class="form-label"></label>
+            <input asp-for="NoOfSubscriptions" class="form-control" type="number" />
+            <span asp-validation-for="NoOfSubscriptions" class="text-danger"></span>
+        </div>
+    }
+
+
+    <div class="mb-3">
+        <label asp-for="SportType" class="form-label"></label>
+        <select asp-for="SportType" class="form-select" asp-items="Html.GetEnumSelectList<SASD.Models.Enums.SportType>()"></select>
+        <span asp-validation-for="SportType" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-success">Save</button>
+    <a asp-action="Sports" class="btn btn-secondary">Cancel</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

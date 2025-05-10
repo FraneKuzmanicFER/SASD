@@ -1,0 +1,40 @@
+﻿
+
+@model List<SASD.Models.Sport>
+@{
+    ViewData["Title"] = "Sports Page - sifrarnik";
+}
+
+<h2>Sports List</h2>
+
+<a class="btn btn-primary mb-3" asp-action="CreateEditSportForm">Add New Sport</a>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Number of Players In A Game</th>
+            <th>Number of Subscriptions</th>
+            <th>Sport Type</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var sport in Model)
+        {
+            <tr>
+                <td>@sport.Name</td>
+                <td>@sport.NoOfPlayers</td>
+                <td>@sport.NoOfSubscriptions</td>
+                <td>@sport.SportType</td>
+                <td>
+                    <a class="btn btn-sm btn-warning" asp-action="CreateEditSportForm" asp-route-id="@sport.Id">Edit</a>
+                    <form asp-action="Delete" asp-route-id="@sport.Id" method="post" style="display:inline">
+                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
+                    </form>
+
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
