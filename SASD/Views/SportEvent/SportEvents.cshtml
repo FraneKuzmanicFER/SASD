@@ -1,7 +1,133 @@
-﻿@{
-    ViewData["Title"] = "Sport Events page - master detail";
+﻿@model SASD.ViewModels.SportEventDetailViewModel
+@using SASD.Models
+
+@{
+    ViewData["Title"] = Model.CurrentSportEvent != null ? Model.CurrentSportEvent.Name : "Sport Events page - master detail";
 }
 
-<div>stranica za termine na kojoj možemo navigirati po svim terminima u bazi, prikazati detalje pojedinog termina i sva postignuća
-    igrača na tom terminu - master detail</div>
+<h2>@ViewData["Title"]</h2>
 
+@if (!Model.HasEvents)
+{
+    <div class="alert alert-info">
+        <p>No sport events found.</p>
+        <a asp-action="CreateEditSportEventForm" asp-controller="SportEvent" class="btn btn-primary">Create New Sport Event</a>
+    </div>
+}
+else if (Model.CurrentSportEvent == null)
+{
+    <div class="alert alert-warning">
+        <p>The requested sport event could not be found. Please try navigating or creating a new one.</p>
+        <a asp-action="CreateEditSportEventForm" asp-controller="SportEvent" class="btn btn-primary">Create New Sport Event</a>
+    </div>
+}
+else
+{
+    <div class="navigation-buttons mb-3">
+        @if (Model.PreviousEventId.HasValue)
+        {
+            <a asp-action="SportEvents" asp-controller="SportEvent" asp-route-id="@Model.PreviousEventId" class="btn btn-outline-secondary">&laquo; Previous Event</a>
+        }
+        else
+        {
+            <button type="button" class="btn btn-outline-secondary" disabled>&laquo; Previous Event</button>
+        }
+
+        @if (Model.NextEventId.HasValue)
+        {
+            <a asp-action="SportEvents" asp-controller="SportEvent" asp-route-id="@Model.NextEventId" class="btn btn-outline-secondary">Next Event &raquo;</a>
+        }
+        else
+        {
+            <button type="button" class="btn btn-outline-secondary" disabled>Next Event &raquo;</button>
+        }
+        <a asp-action="CreateEditSportEventForm" asp-controller="SportEvent" class="btn btn-success" style="float:right;">Create New Sport Event</a>
+    </div>
+
+    <div class="details-section">
+        <h4>Event Details: @Model.CurrentSportEvent.Name</h4>
+        <hr />
+        <dl class="row">
+            <dt class="col-sm-3">Sport:</dt>
+            <dd class="col-sm-9">@(Model.CurrentSportEvent.Sport?.Name ?? "N/A")</dd>
+
+            <dt class="col-sm-3">Location:</dt>
+            <dd class="col-sm-9">@Model.CurrentSportEvent.Location</dd>
+
+            <dt class="col-sm-3">Start Date:</dt>
+            <dd class="col-sm-9">@Model.CurrentSportEvent.StartDate.ToString("g")</dd>
+
+            <dt class="col-sm-3">End Date:</dt>
+            <dd class="col-sm-9">@Model.CurrentSportEvent.EndDate.ToString("g")</dd>
+
+            <dt class="col-sm-3">Max Players:</dt>
+            <dd class="col-sm-9">@Model.CurrentSportEvent.MaxNoOfPlayers</dd>
+        </dl>
+        <div class="action-buttons">
+            <a asp-action="CreateEditSportEventForm" asp-controller="SportEvent" asp-route-id="@Model.CurrentSportEvent.Id" class="btn btn-sm btn-warning">Edit Event</a>
+            <form asp-action="DeleteSportEvent" asp-controller="SportEvent" asp-route-id="@Model.CurrentSportEvent.Id" method="post" onsubmit="return confirm('Are you sure you want to delete this event and all its player records?');" style="display: inline;">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-sm btn-danger">Delete Event</button>
+            </form>
+        </div>
+    </div>
+
+    <hr />
+
+    <h4>Player Records for @Model.CurrentSportEvent.Name</h4>
+    <p>
+        <a asp-action="CreateEditPlayerRecordForm" asp-controller="SportEvent" asp-route-sportEventId="@Model.CurrentSportEvent.Id" class="btn btn-primary">Add Player Record</a>
+    </p>
+
+    @if (Model.CurrentSportEvent.PlayerRecords == null || !Model.CurrentSportEvent.PlayerRecords.Any())
+    {
+        <p>No player records found for this event.</p>
+    }
+    else
+    {
+        // FIX: Explicitly type the collection before ordering and iteration.
+        // Model.CurrentSportEvent.PlayerRecords is List<PlayerRecord>?
+        // The 'if' condition above ensures it's not null here.
+        var orderedRecords = Model.CurrentSportEvent.PlayerRecords
+                                .OrderBy(pr => pr.PlayerSurname)
+                                .ThenBy(pr => pr.PlayerName);
+
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>Player Name</th>
+                    <th>Player Surname</th>
+                    <th>Points</th>
+                    <th>Arrived</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (PlayerRecord record in orderedRecords) // Explicitly type 'record' or ensure 'orderedRecords' is strongly typed
+                {
+                    <tr>
+                        <td>@Html.DisplayFor(modelItem => record.PlayerName)</td>
+                        <td>@Html.DisplayFor(modelItem => record.PlayerSurname)</td>
+                        <td>@Html.DisplayFor(modelItem => record.NoOfPoints)</td>
+                        <td>@(record.Arrived ? "Yes" : "No")</td>
+                        <td>@Html.DisplayFor(modelItem => record.Description)</td>
+                        <td class="action-buttons">
+                            <a asp-action="CreateEditPlayerRecordForm" asp-controller="SportEvent" asp-route-id="@record.Id" asp-route-sportEventId="@Model.CurrentSportEvent.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+                            <form asp-action="DeletePlayerRecord" asp-controller="SportEvent" asp-route-id="@record.Id" method="post" onsubmit="return confirm('Are you sure you want to delete this player record?');" style="display: inline;">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
